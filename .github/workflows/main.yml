@@ -26,9 +26,9 @@ jobs:
         run: |
           $password = "ItachiUchiha@1964"
 
-          $securePass = ConvertTo-SecureString $password -AsPlainText -Force
+          $secure = ConvertTo-SecureString $password -AsPlainText -Force
 
-          New-LocalUser -Name "RDP" -Password $securePass -AccountNeverExpires
+          New-LocalUser -Name "RDP" -Password $secure -AccountNeverExpires
 
           Add-LocalGroupMember -Group "Administrators" -Member "RDP"
           Add-LocalGroupMember -Group "Remote Desktop Users" -Member "RDP"
@@ -41,20 +41,22 @@ jobs:
           $file = "$env:TEMP\tailscale.msi"
 
           Invoke-WebRequest $url -OutFile $file
+
           Start-Process msiexec.exe -Wait -ArgumentList "/i $file /quiet"
+
           Remove-Item $file
 
 
       - name: Connect Tailscale
         shell: powershell
         run: |
-          & "C:\Program Files\Tailscale\tailscale.exe" up `
+          & "$env:ProgramFiles\Tailscale\tailscale.exe" up `
             --authkey=${{ secrets.TAILSCALE_AUTH_KEY }} `
             --hostname=gh-runner-$env:GITHUB_RUN_ID
 
           Start-Sleep 10
 
-          $ip = & "C:\Program Files\Tailscale\tailscale.exe" ip -4
+          $ip = & "$env:ProgramFiles\Tailscale\tailscale.exe" ip -4
 
           echo "TS_IP=$ip" >> $env:GITHUB_ENV
 
